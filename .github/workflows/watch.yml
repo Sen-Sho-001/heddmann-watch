@@ -1,0 +1,48 @@
+name: Heddmann Watch
+
+on:
+  schedule:
+    # 15分ごと（GitHub Actionsのcronは数分のズレが発生することがあります）
+    - cron: '*/15 * * * *'
+  workflow_dispatch:  # 手動実行も可能
+
+permissions:
+  contents: write  # last_seen.json をリポジトリに書き戻すため
+
+concurrency:
+  group: heddmann-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run watcher
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python watch.py
+
+      - name: Commit state if changed
+        run: |
+          if [[ -n "$(git status --porcelain last_seen.json)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add last_seen.json
+            git commit -m "chore: update last_seen.json [skip ci]"
+            git push
+          else
+            echo "No state change."
+          fi
