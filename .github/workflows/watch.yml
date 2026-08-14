@@ -2,8 +2,8 @@ name: Heddmann Watch
 
 on:
   schedule:
-    # 15分ごと（GitHub Actionsのcronは数分のズレが発生することがあります）
-    - cron: '*/15 * * * *'
+    # 分ごと（GitHub Actionsのcronは数分のズレが発生することがあります）
+    - cron: '*/5 * * * *'
   workflow_dispatch:  # 手動実行も可能
 
 permissions:
